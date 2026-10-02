@@ -1,0 +1,211 @@
+{
+  "produits": {
+    "riftbound-arcane-box-set": {
+      "limitee": true,
+      "marqueurs": [
+        "precommande"
+      ],
+      "prix": "",
+      "statut": "retire",
+      "titre": "Riftbound : Coffret du set Arcane League of Legendsᵀᴹ"
+    },
+    "riftbound-lunar-revel-bundle-2026": {
+      "limitee": true,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Pack Riftbound: League of Legendsᵀᴹ TCG Lunar Revel 2026 (Édition en langue chinoise)"
+    },
+    "riftbound-origins-booster-display": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Display Riftbound: League of Legends TCG Origins"
+    },
+    "riftbound-origins-champion-deck-jinx": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Origins : Jinx"
+    },
+    "riftbound-origins-champion-deck-leesin": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Origins : Lee Sin"
+    },
+    "riftbound-origins-champion-deck-viktor": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Origins : Viktor"
+    },
+    "riftbound-proving-grounds": {
+      "limitee": false,
+      "marqueurs": [],
+      "prix": "",
+      "signaux": [
+        "availability=inStock",
+        "availability=outOfStock",
+        "availableForSale=false",
+        "availableForSale=true",
+        "filter_available_sizes=Tailles disponibles",
+        "filter_in_stock=En stock",
+        "filter_out_of_stock=Rupture de stock",
+        "isPreorder=false",
+        "isPreorder=null",
+        "isPreorder=true",
+        "isRestockable=false",
+        "isRestockable=true",
+        "showOnlyWhenUnavailable=false",
+        "showOnlyWhenUnavailable=null",
+        "showOnlyWhenUnavailable=true",
+        "static_out_of_stock=Rupture de stock"
+      ],
+      "statut": "inconnu",
+      "titre": "Riftbound: League of Legends TCG Proving Grounds"
+    },
+    "riftbound-radiance-booster-display": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Display de boosters Riftbound: League of Legends TCG Radiance"
+    },
+    "riftbound-radiance-evelynn-seraphine-showdown": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Decks Showdown Riftbound: League of Legends TCG Radiance : Evelynn vs Seraphine"
+    },
+    "riftbound-spiritforged-booster-display": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Display Riftbound: League of Legends TCG Spiritforged"
+    },
+    "riftbound-spiritforged-champion-deck-fiora": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Spiritforged Fiora"
+    },
+    "riftbound-spiritforged-champion-deck-rumble": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Spiritforged Rumble"
+    },
+    "riftbound-t1-2025-worlds-signature-edition": {
+      "limitee": true,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Riftbound x T1 2025 Worlds Champion Signature Edition"
+    },
+    "riftbound-unleashed-booster-display": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Display de boosters Riftbound: League of Legends TCG Unleashed"
+    },
+    "riftbound-unleashed-champion-deck-vex": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Unleashed : Vex"
+    },
+    "riftbound-unleashed-champion-deck-vi": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Deck de champion Riftbound: League of Legends TCG Unleashed : Vi"
+    },
+    "riftbound-unleashed-vault": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Coffre-fort Riftbound: League of Legends TCG Unleashed"
+    },
+    "riftbound-vendetta-booster-display": {
+      "limitee": false,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Display de boosters Riftbound: League of Legends TCG Vendetta"
+    },
+    "riftbound-vendetta-zed-shen-showdown": {
+      "limitee": false,
+      "marqueurs": [],
+      "prix": "",
+      "signaux": [
+        "availability=inStock",
+        "availableForSale=true",
+        "filter_available_sizes=Tailles disponibles",
+        "filter_in_stock=En stock",
+        "filter_out_of_stock=Rupture de stock",
+        "isPreorder=false",
+        "isRestockable=false",
+        "isRestockable=true",
+        "showOnlyWhenUnavailable=true",
+        "static_out_of_stock=Rupture de stock"
+      ],
+      "statut": "inconnu",
+      "titre": "Decks Showdown Riftbound: League of Legends TCG Vendetta : Zed vs Shen"
+    },
+    "riftbound-worlds-bundle-2025": {
+      "limitee": true,
+      "marqueurs": [
+        "rupture"
+      ],
+      "prix": "",
+      "statut": "rupture",
+      "titre": "Pack Riftbound Worlds 2025"
+    }
+  },
+  "version": 2
+}
