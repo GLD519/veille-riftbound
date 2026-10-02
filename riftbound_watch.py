@@ -9,6 +9,8 @@ Variables d'environnement :
   DISCORD_WEBHOOK_URL  (obligatoire) URL du webhook Discord
   DISCORD_MENTION      (optionnel)  ex. "@everyone" ou "<@123456789>"
   RIOT_LOCALE          (optionnel)  défaut "fr-fr"
+
+Un lancement manuel (« Run workflow ») envoie en plus un récapitulatif de tous les produits.
 """
 import html
 import json
@@ -61,6 +63,10 @@ LIBELLES = {
     "retire": "⚫ Retiré de la vente",
     "inconnu": "❔ État illisible",
 }
+COULEURS = {"stock": 0x2ECC71, "precommande": 0xF1C40F, "rupture": 0xE74C3C,
+            "retire": 0x95A5A6, "inconnu": 0xE67E22}
+COULEUR_NOUVEAU = 0x3498DB
+COULEUR_ALERTE = 0xE67E22
 # Sections « produits liés » : leur texte ne concerne pas le produit de la page.
 COUPURES = ("Voir la collection", "Vous aimerez aussi", "Produits similaires",
             "Shop the collection", "You may also like")
@@ -139,7 +145,10 @@ def analyser(page):
 
     # Un prix a toujours des centimes : évite de confondre avec une année (« 2025 € »).
     p = re.search(r"€\s?\d{1,4}[.,]\d{2}|\d{1,4}[.,]\d{2}\s?€", visible)
-    prix = p.group(0).replace(" ", "") if p else ""
+    prix = ""
+    if p:
+        nombre = float(re.sub(r"[€\s]", "", p.group(0)).replace(",", "."))
+        prix = f"{nombre:.2f}".replace(".", ",") + " €"      # format français : « 127,99 € »
     info = {"titre": titre, "prix": prix, "statut": statut, "marqueurs": trouves,
             "limitee": bool(LIMITEE_RE.search(f"{titre} {visible}")), "extrait": visible[:300]}
     if statut == "inconnu":
@@ -166,59 +175,143 @@ def decouvrir():
     return slugs
 
 
+# ───────────────────────── Présentation ─────────────────────────
+
+def url_produit(slug):
+    return f"{BASE}/{LOCALE}/product/{slug}/"
+
+
+def court(titre):
+    """Titre raccourci (sans « Riftbound: League of Legends TCG »)."""
+    t = re.sub(r"\s*Riftbound\s*:?\s*League of Legends\s*(?:™|ᵀᴹ)?\s*(?:TCG)?\s*", " ", titre)
+    t = re.sub(r"^\s*Riftbound\s*:\s*", "", t)
+    t = re.sub(r"\s*League of Legends\s*(?:™|ᵀᴹ)?\s*$", "", t)
+    return re.sub(r"\s+", " ", t).strip() or titre
+
+
+def icone_type(slug):
+    if "display" in slug:
+        return "📦"
+    if "deck" in slug or "showdown" in slug:
+        return "🃏"
+    if "proving" in slug:
+        return "🎲"
+    return "🎁"   # packs, coffrets, bundles, éditions spéciales
+
+
+def nom_lien(slug, info, gras=False):
+    nom = court(info.get("titre") or slug).replace("[", "(").replace("]", ")")
+    lien = f"[{nom}]({url_produit(slug)})"
+    return f"{icone_type(slug)} " + (f"**{lien}**" if gras else lien)
+
+
+def carte(slug, info, titre, couleur):
+    """Carte Discord pour une alerte : 2 lignes (nom cliquable, puis prix et mentions)."""
+    details = []
+    if info.get("prix"):
+        details.append(f"💶 {info['prix']}")
+    if info.get("limitee"):
+        details.append("⭐ Édition limitée")
+    description = nom_lien(slug, info, gras=True) + ("\n" + " · ".join(details) if details else "")
+    return {"title": titre[:250], "description": description, "color": couleur, "url": url_produit(slug)}
+
+
+def carte_groupe(titre, slugs, produits, texte):
+    lignes = "\n\n".join(carte(s, produits[s], "", 0)["description"] for s in slugs[:8])
+    return {"title": titre, "description": f"{texte}\n\n{lignes}", "color": COULEUR_ALERTE}
+
+
+def embeds_liste(titre, lignes, couleur, limite=3500):
+    """Découpe une longue liste en plusieurs cartes (limite de Discord : 4096 caractères)."""
+    morceaux, courant, taille = [], [], 0
+    for ligne in lignes:
+        if courant and taille + len(ligne) + 1 > limite:
+            morceaux.append(courant)
+            courant, taille = [], 0
+        courant.append(ligne)
+        taille += len(ligne) + 1
+    if courant:
+        morceaux.append(courant)
+    return [{"title": titre if i == 0 else f"{titre} (suite)", "description": "\n".join(m), "color": couleur}
+            for i, m in enumerate(morceaux)]
+
+
+def recap(produits):
+    """Récapitulatif : une carte par état, un produit par ligne."""
+    groupes = {}
+    for slug, v in sorted(produits.items(), key=lambda kv: (not kv[1].get("limitee"), kv[0])):
+        groupes.setdefault(v["statut"], []).append((slug, v))   # éditions limitées d'abord
+    embeds = []
+    for st in ("stock", "precommande", "rupture", "retire", "inconnu"):
+        if st not in groupes:
+            continue
+        lignes = []
+        for slug, v in groupes[st]:
+            etoile = "⭐ " if v.get("limitee") else ""
+            prix = f" · {v['prix']}" if v.get("prix") else ""
+            lignes.append(f"{etoile}{nom_lien(slug, v)}{prix}")
+        if st == "inconnu":
+            lignes.append("\n*Aucune mention de stock lisible sur ces pages : tu es prévenu "
+                          "seulement si leurs données changent.*")
+        embeds += embeds_liste(f"{LIBELLES[st]} ({len(groupes[st])})", lignes, COULEURS[st])
+    return f"👀 **Veille Riftbound** — {len(produits)} produits suivis", embeds
+
+
 # ───────────────────────── Discord ─────────────────────────
 
-def discord(message):
-    if not WEBHOOK:
-        print("[Discord non configuré]\n" + message)
-        return
-    data = json.dumps({"content": message[:1990]}).encode()
-    for essai in (1, 2):
-        req = urllib.request.Request(WEBHOOK, data=data, headers={
-            "Content-Type": "application/json", "User-Agent": "riftbound-watch/2.0"})
+def texte_simple(payload):
+    morceaux = [payload.get("content") or ""]
+    for e in payload.get("embeds", []):
+        morceaux.append(f"{e.get('title', '')}\n{e.get('description', '')}")
+    return "\n\n".join(m for m in morceaux if m)
+
+
+def poster(payload):
+    req = urllib.request.Request(WEBHOOK, data=json.dumps(payload).encode(), headers={
+        "Content-Type": "application/json", "User-Agent": "riftbound-watch/3.0"})
+    urllib.request.urlopen(req, timeout=30).read()
+
+
+def envoyer(payload):
+    for essai in (1, 2, 3):
         try:
-            urllib.request.urlopen(req, timeout=30).read()
-            break
+            poster(payload)
+            time.sleep(min(PAUSE, 1))
+            return
         except urllib.error.HTTPError as e:
-            if e.code == 429 and essai == 1:      # trop de messages d'un coup : on attend
+            if e.code == 429 and essai < 3:                 # trop de messages d'un coup : on attend
                 time.sleep(float(e.headers.get("Retry-After", "2")) + 0.5)
+                continue
+            if e.code == 400 and payload.get("embeds"):     # mise en forme refusée : repli en texte simple
+                print("  ! Discord a refusé la mise en forme, envoi en texte simple")
+                payload = {"content": texte_simple(payload)[:1990]}
                 continue
             print(f"  ! envoi Discord échoué : HTTP {e.code}")
             raise
         except Exception as e:
             print(f"  ! envoi Discord échoué : {e}")
             raise
-    time.sleep(min(PAUSE, 1))
 
 
-def ligne(slug, info):
-    limitee = "⭐ ÉDITION LIMITÉE — " if info.get("limitee") else ""
-    icone = "📦 " if "display" in slug else ""
-    prix = f" — {info['prix']}" if info.get("prix") else ""
-    return f"{limitee}{icone}**{info.get('titre') or slug}**{prix}\n{BASE}/{LOCALE}/product/{slug}/"
-
-
-def court(titre):
-    """Titre raccourci pour le récapitulatif (sans « Riftbound: League of Legends TCG »)."""
-    t = re.sub(r"\s*Riftbound\s*:?\s*League of Legends\s*(?:™|ᵀᴹ)?\s*(?:TCG)?\s*", " ", titre)
-    return re.sub(r"\s+", " ", t).strip() or titre
-
-
-def exclu(slug):
-    return any(m in slug for m in EXCLUS)
-
-
-def recap(produits):
-    groupes = {}
-    for slug, v in sorted(produits.items()):
-        nom = ("⭐ " if v.get("limitee") else "") + court(v.get("titre") or slug)
-        groupes.setdefault(v["statut"], []).append(nom)
-    texte = [f"👀 Veille Riftbound activée — {len(produits)} produits suivis"]
-    for st in ("stock", "precommande", "rupture", "retire", "inconnu"):
-        if st in groupes:
-            note = " (état non lisible sur la page : pas de suivi fiable)" if st == "inconnu" else ""
-            texte.append(f"\n{LIBELLES[st]} ({len(groupes[st])}){note} :\n" + " · ".join(groupes[st]))
-    return "\n".join(texte)
+def discord(contenu="", embeds=None):
+    """Envoie un message (texte et/ou cartes). Discord limite : 10 cartes et ~6000 caractères par message."""
+    embeds = embeds or []
+    if not WEBHOOK:
+        print("[Discord non configuré]\n" + texte_simple({"content": contenu, "embeds": embeds}))
+        return
+    lots, lot, total = [], [], 0
+    for e in embeds:
+        t = len(e.get("title", "")) + len(e.get("description", ""))
+        if lot and (len(lot) >= 10 or total + t > 5500):
+            lots.append(lot)
+            lot, total = [], 0
+        lot.append(e)
+        total += t
+    lots.append(lot)
+    for i, lot in enumerate(lots):
+        texte = contenu[:1990] if i == 0 else ""
+        if texte or lot:
+            envoyer({"content": texte, "embeds": lot})
 
 
 # ───────────────────────── Logique d'alerte ─────────────────────────
@@ -244,19 +337,23 @@ def charger():
     return None
 
 
+def exclu(slug):
+    return any(m in slug for m in EXCLUS)
+
+
 def main():
     produits = charger()
     premiere_fois = produits is None
     produits = {k: v for k, v in (produits or {}).items() if not exclu(k)}
 
     slugs = sorted(s for s in set(PRODUITS_CONNUS) | decouvrir() | set(produits) if not exclu(s))
-    alertes = []          # (slug, texte, ping)
+    alertes = []          # (slug, info, titre, couleur, ping)
     a_verifier = []       # slugs ambigus : « rupture » ET un bouton d'achat apparu
     fiches_changees = []  # fiches « illisibles » dont les données de stock ont changé
     ok = echecs = 0
 
     for slug in slugs:
-        code, page = telecharger(f"{BASE}/{LOCALE}/product/{slug}/")
+        code, page = telecharger(url_produit(slug))
         time.sleep(PAUSE)
 
         if code == 404:
@@ -264,8 +361,8 @@ def main():
             if fiche is not None:
                 fiche["absent"] = fiche.get("absent", 0) + 1
                 if fiche["absent"] == 2 and fiche["statut"] != "retire":   # 2 fois de suite : pas un raté
-                    alertes.append((slug, f"🗑️ PRODUIT RETIRÉ DE LA BOUTIQUE (avant : "
-                                          f"{LIBELLES[fiche['statut']]})\n{ligne(slug, fiche)}", False))
+                    alertes.append((slug, fiche, f"🗑️ Retiré de la boutique (avant : {LIBELLES[fiche['statut']]})",
+                                    COULEURS["retire"], False))
                     fiche["statut"] = "retire"
             print(f"  - {slug} : absent de la boutique (404)")
             continue
@@ -286,11 +383,11 @@ def main():
         if not premiere_fois:
             achetable = info["statut"] in ACHETABLE
             if avant is None:
-                alertes.append((slug, f"🆕 NOUVEAU PRODUIT — {LIBELLES[info['statut']]}\n"
-                                      f"{ligne(slug, info)}", achetable))
+                alertes.append((slug, info, f"🆕 Nouveau produit — {LIBELLES[info['statut']]}",
+                                COULEUR_NOUVEAU, achetable))
             elif changement(avant["statut"], info["statut"]):
-                alertes.append((slug, f"🔄 {LIBELLES[avant['statut']]} → {LIBELLES[info['statut']]}\n"
-                                      f"{ligne(slug, info)}", achetable))
+                alertes.append((slug, info, f"🔄 {LIBELLES[avant['statut']]} → {LIBELLES[info['statut']]}",
+                                COULEURS[info["statut"]], achetable))
             elif (info["statut"] == "rupture" and avant["statut"] == "rupture"
                   and (set(info["marqueurs"]) - set(avant.get("marqueurs", []))) & set(ACHETABLE)):
                 a_verifier.append(slug)
@@ -304,30 +401,26 @@ def main():
         return 1
 
     envoyes = 0
-    if premiere_fois:
-        discord(recap(produits))
-        envoyes = 1
-    else:
+    if not premiere_fois:
         # achetables d'abord, puis éditions limitées, puis displays
-        alertes.sort(key=lambda a: (not a[2], "⭐" not in a[1], "display" not in a[0]))
-        for slug, texte, ping in alertes[:MAX_ALERTES]:
-            discord((f"{MENTION} " if ping and MENTION else "") + texte)
+        alertes.sort(key=lambda a: (not a[4], not a[1].get("limitee"), "display" not in a[0]))
+        for slug, info, titre, couleur, ping in alertes[:MAX_ALERTES]:
+            discord(MENTION if ping else "", [carte(slug, info, titre, couleur)])
         if len(alertes) > MAX_ALERTES:
             discord(f"… et {len(alertes) - MAX_ALERTES} autre(s) changement(s) : regarde la boutique.")
         if a_verifier:
-            liste = "\n".join(f"• {produits[s].get('titre') or s}\n  {BASE}/{LOCALE}/product/{s}/"
-                              for s in a_verifier[:8])
-            discord(f"{MENTION + ' ' if MENTION else ''}⚠️ À VÉRIFIER — un bouton d'achat est apparu "
-                    f"alors que « rupture » est encore affiché (restock possible) :\n{liste}")
+            discord(MENTION, [carte_groupe("⚠️ À vérifier — restock possible", a_verifier, produits,
+                                           "Un bouton d'achat est apparu alors que « rupture » est encore affiché.")])
         if fiches_changees:
-            liste = "\n".join(f"• {produits[s].get('titre') or s}\n  {BASE}/{LOCALE}/product/{s}/"
-                              for s in fiches_changees[:8])
-            discord("🔎 CHANGEMENT SUR UNE FICHE ILLISIBLE — l'état d'achat n'est pas lisible, mais les "
-                    f"données de stock de la page ont changé (restock possible) :\n{liste}")
+            discord("", [carte_groupe("🔎 Changement sur une fiche illisible", fiches_changees, produits,
+                                      "L'état d'achat n'est pas lisible, mais les données de stock "
+                                      "de la page ont changé (restock possible).")])
         envoyes = len(alertes) + (1 if a_verifier else 0) + (1 if fiches_changees else 0)
-        # Lancement manuel : confirmation que tout tourne, même sans changement.
-        if envoyes == 0 and os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
-            discord(f"✅ Veille Riftbound OK — {len(produits)} produits suivis, aucun changement.")
+
+    # Premier lancement ou lancement manuel (« Run workflow ») : récapitulatif de tous les produits.
+    if premiere_fois or os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+        discord(*recap(produits))
+        envoyes += 1
 
     with open(ETAT, "w", encoding="utf-8") as f:
         json.dump({"version": VERSION, "produits": produits}, f, ensure_ascii=False, indent=2, sort_keys=True)
