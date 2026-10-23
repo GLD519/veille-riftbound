@@ -9,6 +9,26 @@
       "statut": "retire",
       "titre": "Riftbound : Coffret du set Arcane League of Legendsᵀᴹ"
     },
+    "riftbound-kda-couture-collection": {
+      "limitee": true,
+      "marqueurs": [],
+      "prix": "",
+      "signaux": [
+        "availability=inStock",
+        "availability=outOfStock",
+        "filter_available_sizes=Tailles disponibles",
+        "filter_in_stock=En stock",
+        "filter_out_of_stock=Rupture de stock",
+        "isPreorder=false",
+        "isRestockable=false",
+        "isRestockable=true",
+        "showOnlyWhenUnavailable=null",
+        "showOnlyWhenUnavailable=true",
+        "static_out_of_stock=Rupture de stock"
+      ],
+      "statut": "inconnu",
+      "titre": "Riftbound x K/DA: Couture Collection"
+    },
     "riftbound-lunar-revel-bundle-2026": {
       "limitee": true,
       "marqueurs": [
