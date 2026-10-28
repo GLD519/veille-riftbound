@@ -209,10 +209,8 @@
         "filter_in_stock=En stock",
         "filter_out_of_stock=Rupture de stock",
         "isPreorder=false",
-        "isPreorder=null",
         "isRestockable=false",
         "isRestockable=true",
-        "showOnlyWhenUnavailable=null",
         "showOnlyWhenUnavailable=true",
         "static_out_of_stock=Rupture de stock"
       ],
