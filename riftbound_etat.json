@@ -133,6 +133,15 @@
       "statut": "rupture",
       "titre": "Deck de champion Riftbound: League of Legends TCG Spiritforged Rumble"
     },
+    "riftbound-t1-2025-worlds-player-bundle": {
+      "limitee": true,
+      "marqueurs": [
+        "precommande"
+      ],
+      "prix": "73,99 €",
+      "statut": "precommande",
+      "titre": "Riftbound x T1 2025 Worlds Champion Player Bundle"
+    },
     "riftbound-t1-2025-worlds-signature-edition": {
       "limitee": true,
       "marqueurs": [
@@ -198,13 +207,24 @@
         "filter_in_stock=En stock",
         "filter_out_of_stock=Rupture de stock",
         "isPreorder=false",
+        "isPreorder=true",
         "isRestockable=false",
         "isRestockable=true",
+        "showOnlyWhenUnavailable=null",
         "showOnlyWhenUnavailable=true",
         "static_out_of_stock=Rupture de stock"
       ],
       "statut": "inconnu",
       "titre": "Decks Showdown Riftbound: League of Legends TCG Vendetta : Zed vs Shen"
+    },
+    "riftbound-worlds-2026-edition": {
+      "limitee": true,
+      "marqueurs": [
+        "precommande"
+      ],
+      "prix": "84,99 €",
+      "statut": "precommande",
+      "titre": "Riftbound x Worlds 2026 Edition"
     },
     "riftbound-worlds-bundle-2025": {
       "limitee": true,
