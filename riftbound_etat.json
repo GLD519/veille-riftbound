@@ -136,10 +136,10 @@
     "riftbound-t1-2025-worlds-player-bundle": {
       "limitee": true,
       "marqueurs": [
-        "precommande"
+        "rupture"
       ],
-      "prix": "73,99 €",
-      "statut": "precommande",
+      "prix": "",
+      "statut": "rupture",
       "titre": "Riftbound x T1 2025 Worlds Champion Player Bundle"
     },
     "riftbound-t1-2025-worlds-signature-edition": {
@@ -207,10 +207,8 @@
         "filter_in_stock=En stock",
         "filter_out_of_stock=Rupture de stock",
         "isPreorder=false",
-        "isPreorder=true",
         "isRestockable=false",
         "isRestockable=true",
-        "showOnlyWhenUnavailable=null",
         "showOnlyWhenUnavailable=true",
         "static_out_of_stock=Rupture de stock"
       ],
@@ -220,10 +218,10 @@
     "riftbound-worlds-2026-edition": {
       "limitee": true,
       "marqueurs": [
-        "precommande"
+        "rupture"
       ],
-      "prix": "84,99 €",
-      "statut": "precommande",
+      "prix": "",
+      "statut": "rupture",
       "titre": "Riftbound x Worlds 2026 Edition"
     },
     "riftbound-worlds-bundle-2025": {
