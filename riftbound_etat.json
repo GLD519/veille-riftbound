@@ -2,9 +2,7 @@
   "produits": {
     "riftbound-arcane-box-set": {
       "limitee": true,
-      "marqueurs": [
-        "precommande"
-      ],
+      "marqueurs": [],
       "prix": "",
       "statut": "retire",
       "titre": "Riftbound : Coffret du set Arcane League of Legendsᵀᴹ"
@@ -77,10 +75,8 @@
         "filter_out_of_stock=Rupture de stock",
         "isPreorder=false",
         "isPreorder=null",
-        "isPreorder=true",
         "isRestockable=false",
         "isRestockable=true",
-        "showOnlyWhenUnavailable=false",
         "showOnlyWhenUnavailable=null",
         "showOnlyWhenUnavailable=true",
         "static_out_of_stock=Rupture de stock"
