@@ -8,6 +8,7 @@ Aucune dépendance : bibliothèque standard Python uniquement.
 Variables d'environnement :
   DISCORD_WEBHOOK_URL  (obligatoire) URL du webhook Discord
   DISCORD_MENTION      (optionnel)  ex. "@everyone" ou "<@123456789>"
+  DISCORD_MENTION_PRECO (optionnel) mention dédiée aux précommandes (sinon DISCORD_MENTION)
   RIOT_LOCALE          (optionnel)  défaut "fr-fr"
 
 Un lancement manuel (« Run workflow ») envoie en plus un récapitulatif de tous les produits.
@@ -26,6 +27,8 @@ BASE = os.environ.get("RIOT_BASE_URL", "https://merch.riotgames.com").rstrip("/"
 LOCALE = os.environ.get("RIOT_LOCALE", "fr-fr")
 WEBHOOK = os.environ.get("DISCORD_WEBHOOK_URL", "")
 MENTION = os.environ.get("DISCORD_MENTION", "")
+# Mention dédiée aux précommandes (sinon la mention générale)
+MENTION_PRECO = os.environ.get("DISCORD_MENTION_PRECO", "") or MENTION
 ETAT = os.environ.get("RIFTBOUND_ETAT", "riftbound_etat.json")
 PAUSE = float(os.environ.get("RIFTBOUND_PAUSE", "1"))
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
@@ -403,11 +406,18 @@ def main():
     envoyes = 0
     if not premiere_fois:
         # achetables d'abord, puis éditions limitées, puis displays
-        alertes.sort(key=lambda a: (not a[4], not a[1].get("limitee"), "display" not in a[0]))
-        for slug, info, titre, couleur, ping in alertes[:MAX_ALERTES]:
+        # précommandes : chacune dans son propre message, avec sa mention dédiée, jamais tronquées
+        preco = [a for a in alertes if a[1]["statut"] == "precommande"]
+        autres = [a for a in alertes if a[1]["statut"] != "precommande"]
+        for slug, info, titre, couleur, ping in preco:
+            discord(f"{MENTION_PRECO} 🟡 **Précommande** : {court(info.get('titre') or slug)}".strip(),
+                    [carte(slug, info, titre, couleur)])
+        # achetables d'abord, puis éditions limitées, puis displays
+        autres.sort(key=lambda a: (not a[4], not a[1].get("limitee"), "display" not in a[0]))
+        for slug, info, titre, couleur, ping in autres[:MAX_ALERTES]:
             discord(MENTION if ping else "", [carte(slug, info, titre, couleur)])
-        if len(alertes) > MAX_ALERTES:
-            discord(f"… et {len(alertes) - MAX_ALERTES} autre(s) changement(s) : regarde la boutique.")
+        if len(autres) > MAX_ALERTES:
+            discord(f"… et {len(autres) - MAX_ALERTES} autre(s) changement(s) : regarde la boutique.")
         if a_verifier:
             discord(MENTION, [carte_groupe("⚠️ À vérifier — restock possible", a_verifier, produits,
                                            "Un bouton d'achat est apparu alors que « rupture » est encore affiché.")])
